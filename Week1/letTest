@@ -1,0 +1,24 @@
+unsigned long lastBlinkTime = 0; // Variable to store the last time LED blinked
+bool ledState = LOW;             // Variable to store the current state of the LED
+
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);            // Start serial communication at 9600 baud rate
+}
+
+void loop() {
+  unsigned long currentMillis = millis(); // Store the current time
+
+  if (currentMillis - lastBlinkTime >= 500) { // Check if 500ms have passed
+    ledState = !ledState;                    // Toggle the LED state
+    digitalWrite(LED_BUILTIN, ledState);     // Set the LED according to ledState
+
+    // Print the time and state to the Serial Monitor
+    Serial.print("Blink at: ");
+    Serial.print(currentMillis);
+    Serial.print(" ms, LED State: ");
+    Serial.println(ledState ? "ON" : "OFF");
+
+    lastBlinkTime = currentMillis; // Save the last blink time
+  }
+}
