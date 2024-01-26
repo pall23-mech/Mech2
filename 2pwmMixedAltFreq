@@ -1,0 +1,47 @@
+void setup() {
+  // Start the serial communication
+  Serial.begin(57600);
+
+  // Set up pin 9 for default PWM
+  pinMode(9, OUTPUT);
+
+  // Set up pin 11 for PWM at a higher frequency
+  pinMode(11, OUTPUT);
+
+  // Modify Timer 2 for Fast PWM mode
+  TCCR2A = _BV(COM2A1) | _BV(WGM20) | _BV(WGM21);
+  TCCR2B = _BV(CS22) | _BV(CS21); // Set prescaler to 256?
+  
+  // Initialize A2 as an input pin
+  // This is optional for analog pins as they default to input mode
+  pinMode(A2, INPUT);
+}
+
+void loop() {
+  // Set PWM duty cycle on pin 9 (can be adjusted from 0 to 255)
+  TCCR2B = _BV(CS22) | _BV(CS21);
+  analogWrite(9, 100); // Example duty cycle
+
+  // Set PWM duty cycle on pin 11 (can be adjusted from 0 to 255)
+  analogWrite(11, 128); // Example duty cycle
+  delay(1000);
+    analogWrite(9, 200); // Example duty cycle
+    TCCR2B = _BV(CS22) ;
+
+  // Set PWM duty cycle on pin 11 (can be adjusted from 0 to 255)
+  analogWrite(11, 128); // Example duty cycle
+  delay(1000);
+    analogWrite(9, 50); // Example duty cycle
+
+  // Set PWM duty cycle on pin 11 (can be adjusted from 0 to 255)
+  analogWrite(11, 128); // Example duty cycle
+  delay(1000);
+  // Read the value from analog pin A2
+  int sensorValue = analogRead(A2);
+
+  // Print the value to the Serial Monitor
+  Serial.println(sensorValue);
+
+  // Wait a bit before reading again
+ // delay(1000); // Delay of 1 second
+}
