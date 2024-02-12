@@ -1,13 +1,12 @@
 #include "DelayMech.h"
 
 void delay_ms(unsigned long long ms) {
-    unsigned long long pre = ms * F_CPU/100000; //assumed 1ms = 160 cycles
-    unsigned long long scale =200*pre;    //scaling in attempt to prevent rounding errors
-    unsigned long long cycles=scale/500;
+    unsigned long long pre = ms * (F_CPU/1000000); //assumed 1ms = 16000 cycles
+    unsigned long long scale =(pre)*100/205;    //scaling in attempt to prevent rounding errors
+    unsigned long long cycles=scale;
     // Loop that decrements 'cycles' until it reaches 0
     while(cycles > 0){
-        __asm__ __volatile__("nop"); // assuming 4 operations
-        cycles -= 4; // 
+       cycles--;
     }}
 void delay_us(unsigned long us) {
         unsigned long pre = us;///168;//00/168; //*(/1,68); // Correct calculation for 16MHz CPU, assuming 1 millisecond = 16000 cycles
