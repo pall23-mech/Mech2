@@ -26,8 +26,8 @@ int main() {
     DDRB = 0x20; // Set PB5 as an output
     uart_init(); // Initialize UART
 
-    unsigned char input;
-    int c, f;
+    char input;
+    int c=1000, f=0;
 
     while (1) {
         input = uart_receive(); // Read character from UART
@@ -45,10 +45,10 @@ int main() {
                 c = 1500;
                 f = 500;
                 break;
-            default:
-                continue; // If input is not 0, 1, or 2, ignore it
+            //default:
+               // continue; // If input is not 0, 1, or 2, ignore it
         }
-
+        
         PORTB = 0x20; // Turn on LED
         delay_us(c);  // Delay for 'c' microseconds
         PORTB = 0x00; // Turn off LED
