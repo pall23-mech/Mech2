@@ -1,0 +1,579 @@
+
+BlinkF.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000003be  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .stab         000006a8  00000000  00000000  00000414  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  2 .stabstr      0000072f  00000000  00000000  00000abc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
+   4:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   8:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  10:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  14:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  18:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  1c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  20:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  24:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  28:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  2c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  30:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  34:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  38:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  3c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  40:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  44:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  48:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  4c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  50:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  54:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  58:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  5c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  60:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  64:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+
+00000068 <__ctors_end>:
+  68:	11 24       	eor	r1, r1
+  6a:	1f be       	out	0x3f, r1	; 63
+  6c:	cf ef       	ldi	r28, 0xFF	; 255
+  6e:	d8 e0       	ldi	r29, 0x08	; 8
+  70:	de bf       	out	0x3e, r29	; 62
+  72:	cd bf       	out	0x3d, r28	; 61
+  74:	0e 94 2c 01 	call	0x258	; 0x258 <main>
+  78:	0c 94 dd 01 	jmp	0x3ba	; 0x3ba <_exit>
+
+0000007c <__bad_interrupt>:
+  7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000080 <delay_ms>:
+#include "DelayMech.h"
+
+void delay_ms(unsigned  long ms) {
+  80:	df 93       	push	r29
+  82:	cf 93       	push	r28
+  84:	cd b7       	in	r28, 0x3d	; 61
+  86:	de b7       	in	r29, 0x3e	; 62
+  88:	60 97       	sbiw	r28, 0x10	; 16
+  8a:	0f b6       	in	r0, 0x3f	; 63
+  8c:	f8 94       	cli
+  8e:	de bf       	out	0x3e, r29	; 62
+  90:	0f be       	out	0x3f, r0	; 63
+  92:	cd bf       	out	0x3d, r28	; 61
+  94:	6d 87       	std	Y+13, r22	; 0x0d
+  96:	7e 87       	std	Y+14, r23	; 0x0e
+  98:	8f 87       	std	Y+15, r24	; 0x0f
+  9a:	98 8b       	std	Y+16, r25	; 0x10
+    unsigned long pre = ms * (F_CPU/1000/34); //assumed 1ms = 16000 cycles, however it appears to be 1000 times faster
+  9c:	8d 85       	ldd	r24, Y+13	; 0x0d
+  9e:	9e 85       	ldd	r25, Y+14	; 0x0e
+  a0:	af 85       	ldd	r26, Y+15	; 0x0f
+  a2:	b8 89       	ldd	r27, Y+16	; 0x10
+  a4:	26 ed       	ldi	r18, 0xD6	; 214
+  a6:	31 e0       	ldi	r19, 0x01	; 1
+  a8:	40 e0       	ldi	r20, 0x00	; 0
+  aa:	50 e0       	ldi	r21, 0x00	; 0
+  ac:	bc 01       	movw	r22, r24
+  ae:	cd 01       	movw	r24, r26
+  b0:	0e 94 9c 01 	call	0x338	; 0x338 <__mulsi3>
+  b4:	dc 01       	movw	r26, r24
+  b6:	cb 01       	movw	r24, r22
+  b8:	89 87       	std	Y+9, r24	; 0x09
+  ba:	9a 87       	std	Y+10, r25	; 0x0a
+  bc:	ab 87       	std	Y+11, r26	; 0x0b
+  be:	bc 87       	std	Y+12, r27	; 0x0c
+    unsigned long scale =(pre);    //scaling in attempt to prevent rounding errors
+  c0:	89 85       	ldd	r24, Y+9	; 0x09
+  c2:	9a 85       	ldd	r25, Y+10	; 0x0a
+  c4:	ab 85       	ldd	r26, Y+11	; 0x0b
+  c6:	bc 85       	ldd	r27, Y+12	; 0x0c
+  c8:	8d 83       	std	Y+5, r24	; 0x05
+  ca:	9e 83       	std	Y+6, r25	; 0x06
+  cc:	af 83       	std	Y+7, r26	; 0x07
+  ce:	b8 87       	std	Y+8, r27	; 0x08
+    unsigned long cycles=scale;
+  d0:	8d 81       	ldd	r24, Y+5	; 0x05
+  d2:	9e 81       	ldd	r25, Y+6	; 0x06
+  d4:	af 81       	ldd	r26, Y+7	; 0x07
+  d6:	b8 85       	ldd	r27, Y+8	; 0x08
+  d8:	89 83       	std	Y+1, r24	; 0x01
+  da:	9a 83       	std	Y+2, r25	; 0x02
+  dc:	ab 83       	std	Y+3, r26	; 0x03
+  de:	bc 83       	std	Y+4, r27	; 0x04
+  e0:	0b c0       	rjmp	.+22     	; 0xf8 <delay_ms+0x78>
+    // Loop that decrements 'cycles' until it reaches 0
+    while(cycles > 0){
+       cycles--;
+  e2:	89 81       	ldd	r24, Y+1	; 0x01
+  e4:	9a 81       	ldd	r25, Y+2	; 0x02
+  e6:	ab 81       	ldd	r26, Y+3	; 0x03
+  e8:	bc 81       	ldd	r27, Y+4	; 0x04
+  ea:	01 97       	sbiw	r24, 0x01	; 1
+  ec:	a1 09       	sbc	r26, r1
+  ee:	b1 09       	sbc	r27, r1
+  f0:	89 83       	std	Y+1, r24	; 0x01
+  f2:	9a 83       	std	Y+2, r25	; 0x02
+  f4:	ab 83       	std	Y+3, r26	; 0x03
+  f6:	bc 83       	std	Y+4, r27	; 0x04
+void delay_ms(unsigned  long ms) {
+    unsigned long pre = ms * (F_CPU/1000/34); //assumed 1ms = 16000 cycles, however it appears to be 1000 times faster
+    unsigned long scale =(pre);    //scaling in attempt to prevent rounding errors
+    unsigned long cycles=scale;
+    // Loop that decrements 'cycles' until it reaches 0
+    while(cycles > 0){
+  f8:	89 81       	ldd	r24, Y+1	; 0x01
+  fa:	9a 81       	ldd	r25, Y+2	; 0x02
+  fc:	ab 81       	ldd	r26, Y+3	; 0x03
+  fe:	bc 81       	ldd	r27, Y+4	; 0x04
+ 100:	00 97       	sbiw	r24, 0x00	; 0
+ 102:	a1 05       	cpc	r26, r1
+ 104:	b1 05       	cpc	r27, r1
+ 106:	69 f7       	brne	.-38     	; 0xe2 <delay_ms+0x62>
+       cycles--;
+    }}
+ 108:	60 96       	adiw	r28, 0x10	; 16
+ 10a:	0f b6       	in	r0, 0x3f	; 63
+ 10c:	f8 94       	cli
+ 10e:	de bf       	out	0x3e, r29	; 62
+ 110:	0f be       	out	0x3f, r0	; 63
+ 112:	cd bf       	out	0x3d, r28	; 61
+ 114:	cf 91       	pop	r28
+ 116:	df 91       	pop	r29
+ 118:	08 95       	ret
+
+0000011a <delay_us>:
+void delay_us(unsigned long us) {
+ 11a:	df 93       	push	r29
+ 11c:	cf 93       	push	r28
+ 11e:	cd b7       	in	r28, 0x3d	; 61
+ 120:	de b7       	in	r29, 0x3e	; 62
+ 122:	28 97       	sbiw	r28, 0x08	; 8
+ 124:	0f b6       	in	r0, 0x3f	; 63
+ 126:	f8 94       	cli
+ 128:	de bf       	out	0x3e, r29	; 62
+ 12a:	0f be       	out	0x3f, r0	; 63
+ 12c:	cd bf       	out	0x3d, r28	; 61
+ 12e:	6d 83       	std	Y+5, r22	; 0x05
+ 130:	7e 83       	std	Y+6, r23	; 0x06
+ 132:	8f 83       	std	Y+7, r24	; 0x07
+ 134:	98 87       	std	Y+8, r25	; 0x08
+        unsigned long cycles = us;//(16/22);///more efficient not to use cpu // Correct calculation for 16MHz CPU, assuming 1 millisecond = 16000 cycles
+ 136:	8d 81       	ldd	r24, Y+5	; 0x05
+ 138:	9e 81       	ldd	r25, Y+6	; 0x06
+ 13a:	af 81       	ldd	r26, Y+7	; 0x07
+ 13c:	b8 85       	ldd	r27, Y+8	; 0x08
+ 13e:	89 83       	std	Y+1, r24	; 0x01
+ 140:	9a 83       	std	Y+2, r25	; 0x02
+ 142:	ab 83       	std	Y+3, r26	; 0x03
+ 144:	bc 83       	std	Y+4, r27	; 0x04
+ 146:	0b c0       	rjmp	.+22     	; 0x15e <delay_us+0x44>
+         //scaling
+        // Loop that decrements 'cycles' until it reaches 0
+        while(cycles > 0){
+        	cycles--;
+ 148:	89 81       	ldd	r24, Y+1	; 0x01
+ 14a:	9a 81       	ldd	r25, Y+2	; 0x02
+ 14c:	ab 81       	ldd	r26, Y+3	; 0x03
+ 14e:	bc 81       	ldd	r27, Y+4	; 0x04
+ 150:	01 97       	sbiw	r24, 0x01	; 1
+ 152:	a1 09       	sbc	r26, r1
+ 154:	b1 09       	sbc	r27, r1
+ 156:	89 83       	std	Y+1, r24	; 0x01
+ 158:	9a 83       	std	Y+2, r25	; 0x02
+ 15a:	ab 83       	std	Y+3, r26	; 0x03
+ 15c:	bc 83       	std	Y+4, r27	; 0x04
+    }}
+void delay_us(unsigned long us) {
+        unsigned long cycles = us;//(16/22);///more efficient not to use cpu // Correct calculation for 16MHz CPU, assuming 1 millisecond = 16000 cycles
+         //scaling
+        // Loop that decrements 'cycles' until it reaches 0
+        while(cycles > 0){
+ 15e:	89 81       	ldd	r24, Y+1	; 0x01
+ 160:	9a 81       	ldd	r25, Y+2	; 0x02
+ 162:	ab 81       	ldd	r26, Y+3	; 0x03
+ 164:	bc 81       	ldd	r27, Y+4	; 0x04
+ 166:	00 97       	sbiw	r24, 0x00	; 0
+ 168:	a1 05       	cpc	r26, r1
+ 16a:	b1 05       	cpc	r27, r1
+ 16c:	69 f7       	brne	.-38     	; 0x148 <delay_us+0x2e>
+        	cycles--;
+        }}
+ 16e:	28 96       	adiw	r28, 0x08	; 8
+ 170:	0f b6       	in	r0, 0x3f	; 63
+ 172:	f8 94       	cli
+ 174:	de bf       	out	0x3e, r29	; 62
+ 176:	0f be       	out	0x3f, r0	; 63
+ 178:	cd bf       	out	0x3d, r28	; 61
+ 17a:	cf 91       	pop	r28
+ 17c:	df 91       	pop	r29
+ 17e:	08 95       	ret
+
+00000180 <delay_s>:
+void delay_s(unsigned long s) {
+ 180:	df 93       	push	r29
+ 182:	cf 93       	push	r28
+ 184:	cd b7       	in	r28, 0x3d	; 61
+ 186:	de b7       	in	r29, 0x3e	; 62
+ 188:	60 97       	sbiw	r28, 0x10	; 16
+ 18a:	0f b6       	in	r0, 0x3f	; 63
+ 18c:	f8 94       	cli
+ 18e:	de bf       	out	0x3e, r29	; 62
+ 190:	0f be       	out	0x3f, r0	; 63
+ 192:	cd bf       	out	0x3d, r28	; 61
+ 194:	6d 87       	std	Y+13, r22	; 0x0d
+ 196:	7e 87       	std	Y+14, r23	; 0x0e
+ 198:	8f 87       	std	Y+15, r24	; 0x0f
+ 19a:	98 8b       	std	Y+16, r25	; 0x10
+   unsigned long pre = s * F_CPU/100;///168;//00/168; //*(/1,68); // Correct calculation for 16MHz CPU, assuming 1 millisecond = 16000 cycles
+ 19c:	8d 85       	ldd	r24, Y+13	; 0x0d
+ 19e:	9e 85       	ldd	r25, Y+14	; 0x0e
+ 1a0:	af 85       	ldd	r26, Y+15	; 0x0f
+ 1a2:	b8 89       	ldd	r27, Y+16	; 0x10
+ 1a4:	20 e0       	ldi	r18, 0x00	; 0
+ 1a6:	34 e2       	ldi	r19, 0x24	; 36
+ 1a8:	44 ef       	ldi	r20, 0xF4	; 244
+ 1aa:	50 e0       	ldi	r21, 0x00	; 0
+ 1ac:	bc 01       	movw	r22, r24
+ 1ae:	cd 01       	movw	r24, r26
+ 1b0:	0e 94 9c 01 	call	0x338	; 0x338 <__mulsi3>
+ 1b4:	dc 01       	movw	r26, r24
+ 1b6:	cb 01       	movw	r24, r22
+ 1b8:	24 e6       	ldi	r18, 0x64	; 100
+ 1ba:	30 e0       	ldi	r19, 0x00	; 0
+ 1bc:	40 e0       	ldi	r20, 0x00	; 0
+ 1be:	50 e0       	ldi	r21, 0x00	; 0
+ 1c0:	bc 01       	movw	r22, r24
+ 1c2:	cd 01       	movw	r24, r26
+ 1c4:	0e 94 bb 01 	call	0x376	; 0x376 <__udivmodsi4>
+ 1c8:	da 01       	movw	r26, r20
+ 1ca:	c9 01       	movw	r24, r18
+ 1cc:	89 87       	std	Y+9, r24	; 0x09
+ 1ce:	9a 87       	std	Y+10, r25	; 0x0a
+ 1d0:	ab 87       	std	Y+11, r26	; 0x0b
+ 1d2:	bc 87       	std	Y+12, r27	; 0x0c
+   unsigned long scale =200*pre;
+ 1d4:	89 85       	ldd	r24, Y+9	; 0x09
+ 1d6:	9a 85       	ldd	r25, Y+10	; 0x0a
+ 1d8:	ab 85       	ldd	r26, Y+11	; 0x0b
+ 1da:	bc 85       	ldd	r27, Y+12	; 0x0c
+ 1dc:	28 ec       	ldi	r18, 0xC8	; 200
+ 1de:	30 e0       	ldi	r19, 0x00	; 0
+ 1e0:	40 e0       	ldi	r20, 0x00	; 0
+ 1e2:	50 e0       	ldi	r21, 0x00	; 0
+ 1e4:	bc 01       	movw	r22, r24
+ 1e6:	cd 01       	movw	r24, r26
+ 1e8:	0e 94 9c 01 	call	0x338	; 0x338 <__mulsi3>
+ 1ec:	dc 01       	movw	r26, r24
+ 1ee:	cb 01       	movw	r24, r22
+ 1f0:	8d 83       	std	Y+5, r24	; 0x05
+ 1f2:	9e 83       	std	Y+6, r25	; 0x06
+ 1f4:	af 83       	std	Y+7, r26	; 0x07
+ 1f6:	b8 87       	std	Y+8, r27	; 0x08
+   unsigned long cycles=scale/500;    // Loop that decrements 'cycles' until it reaches 0
+ 1f8:	8d 81       	ldd	r24, Y+5	; 0x05
+ 1fa:	9e 81       	ldd	r25, Y+6	; 0x06
+ 1fc:	af 81       	ldd	r26, Y+7	; 0x07
+ 1fe:	b8 85       	ldd	r27, Y+8	; 0x08
+ 200:	24 ef       	ldi	r18, 0xF4	; 244
+ 202:	31 e0       	ldi	r19, 0x01	; 1
+ 204:	40 e0       	ldi	r20, 0x00	; 0
+ 206:	50 e0       	ldi	r21, 0x00	; 0
+ 208:	bc 01       	movw	r22, r24
+ 20a:	cd 01       	movw	r24, r26
+ 20c:	0e 94 bb 01 	call	0x376	; 0x376 <__udivmodsi4>
+ 210:	da 01       	movw	r26, r20
+ 212:	c9 01       	movw	r24, r18
+ 214:	89 83       	std	Y+1, r24	; 0x01
+ 216:	9a 83       	std	Y+2, r25	; 0x02
+ 218:	ab 83       	std	Y+3, r26	; 0x03
+ 21a:	bc 83       	std	Y+4, r27	; 0x04
+ 21c:	0c c0       	rjmp	.+24     	; 0x236 <delay_s+0xb6>
+
+   while(cycles > 0){
+        __asm__ __volatile__("nop"); // Perform a no-operation to ensure the loop body is not empty
+ 21e:	00 00       	nop
+       cycles -= 4; // Adjust this value based on actual calibration
+ 220:	89 81       	ldd	r24, Y+1	; 0x01
+ 222:	9a 81       	ldd	r25, Y+2	; 0x02
+ 224:	ab 81       	ldd	r26, Y+3	; 0x03
+ 226:	bc 81       	ldd	r27, Y+4	; 0x04
+ 228:	04 97       	sbiw	r24, 0x04	; 4
+ 22a:	a1 09       	sbc	r26, r1
+ 22c:	b1 09       	sbc	r27, r1
+ 22e:	89 83       	std	Y+1, r24	; 0x01
+ 230:	9a 83       	std	Y+2, r25	; 0x02
+ 232:	ab 83       	std	Y+3, r26	; 0x03
+ 234:	bc 83       	std	Y+4, r27	; 0x04
+void delay_s(unsigned long s) {
+   unsigned long pre = s * F_CPU/100;///168;//00/168; //*(/1,68); // Correct calculation for 16MHz CPU, assuming 1 millisecond = 16000 cycles
+   unsigned long scale =200*pre;
+   unsigned long cycles=scale/500;    // Loop that decrements 'cycles' until it reaches 0
+
+   while(cycles > 0){
+ 236:	89 81       	ldd	r24, Y+1	; 0x01
+ 238:	9a 81       	ldd	r25, Y+2	; 0x02
+ 23a:	ab 81       	ldd	r26, Y+3	; 0x03
+ 23c:	bc 81       	ldd	r27, Y+4	; 0x04
+ 23e:	00 97       	sbiw	r24, 0x00	; 0
+ 240:	a1 05       	cpc	r26, r1
+ 242:	b1 05       	cpc	r27, r1
+ 244:	61 f7       	brne	.-40     	; 0x21e <delay_s+0x9e>
+        __asm__ __volatile__("nop"); // Perform a no-operation to ensure the loop body is not empty
+       cycles -= 4; // Adjust this value based on actual calibration
+
+}
+}
+ 246:	60 96       	adiw	r28, 0x10	; 16
+ 248:	0f b6       	in	r0, 0x3f	; 63
+ 24a:	f8 94       	cli
+ 24c:	de bf       	out	0x3e, r29	; 62
+ 24e:	0f be       	out	0x3f, r0	; 63
+ 250:	cd bf       	out	0x3d, r28	; 61
+ 252:	cf 91       	pop	r28
+ 254:	df 91       	pop	r29
+ 256:	08 95       	ret
+
+00000258 <main>:
+
+#define F_CPU 16000000UL
+#include<avr/io.h>
+#include "DelayMech.h"
+int main()
+{
+ 258:	df 93       	push	r29
+ 25a:	cf 93       	push	r28
+ 25c:	00 d0       	rcall	.+0      	; 0x25e <main+0x6>
+ 25e:	00 d0       	rcall	.+0      	; 0x260 <main+0x8>
+ 260:	cd b7       	in	r28, 0x3d	; 61
+ 262:	de b7       	in	r29, 0x3e	; 62
+	DDRB=0x20;
+ 264:	e4 e2       	ldi	r30, 0x24	; 36
+ 266:	f0 e0       	ldi	r31, 0x00	; 0
+ 268:	80 e2       	ldi	r24, 0x20	; 32
+ 26a:	80 83       	st	Z, r24
+	int c;
+	int f;
+	while (1)
+	{
+		c=1000;
+ 26c:	88 ee       	ldi	r24, 0xE8	; 232
+ 26e:	93 e0       	ldi	r25, 0x03	; 3
+ 270:	9c 83       	std	Y+4, r25	; 0x04
+ 272:	8b 83       	std	Y+3, r24	; 0x03
+		f = 1000;
+ 274:	88 ee       	ldi	r24, 0xE8	; 232
+ 276:	93 e0       	ldi	r25, 0x03	; 3
+ 278:	9a 83       	std	Y+2, r25	; 0x02
+ 27a:	89 83       	std	Y+1, r24	; 0x01
+ 27c:	25 c0       	rjmp	.+74     	; 0x2c8 <main+0x70>
+		while(c>0)
+		{
+		PORTB=0x20;
+ 27e:	e5 e2       	ldi	r30, 0x25	; 37
+ 280:	f0 e0       	ldi	r31, 0x00	; 0
+ 282:	80 e2       	ldi	r24, 0x20	; 32
+ 284:	80 83       	st	Z, r24
+		delay_us(c);
+ 286:	8b 81       	ldd	r24, Y+3	; 0x03
+ 288:	9c 81       	ldd	r25, Y+4	; 0x04
+ 28a:	aa 27       	eor	r26, r26
+ 28c:	97 fd       	sbrc	r25, 7
+ 28e:	a0 95       	com	r26
+ 290:	ba 2f       	mov	r27, r26
+ 292:	bc 01       	movw	r22, r24
+ 294:	cd 01       	movw	r24, r26
+ 296:	0e 94 8d 00 	call	0x11a	; 0x11a <delay_us>
+		PORTB=0x00;
+ 29a:	e5 e2       	ldi	r30, 0x25	; 37
+ 29c:	f0 e0       	ldi	r31, 0x00	; 0
+ 29e:	10 82       	st	Z, r1
+		delay_us(f);
+ 2a0:	89 81       	ldd	r24, Y+1	; 0x01
+ 2a2:	9a 81       	ldd	r25, Y+2	; 0x02
+ 2a4:	aa 27       	eor	r26, r26
+ 2a6:	97 fd       	sbrc	r25, 7
+ 2a8:	a0 95       	com	r26
+ 2aa:	ba 2f       	mov	r27, r26
+ 2ac:	bc 01       	movw	r22, r24
+ 2ae:	cd 01       	movw	r24, r26
+ 2b0:	0e 94 8d 00 	call	0x11a	; 0x11a <delay_us>
+		c-=10;
+ 2b4:	8b 81       	ldd	r24, Y+3	; 0x03
+ 2b6:	9c 81       	ldd	r25, Y+4	; 0x04
+ 2b8:	0a 97       	sbiw	r24, 0x0a	; 10
+ 2ba:	9c 83       	std	Y+4, r25	; 0x04
+ 2bc:	8b 83       	std	Y+3, r24	; 0x03
+		f+=10;
+ 2be:	89 81       	ldd	r24, Y+1	; 0x01
+ 2c0:	9a 81       	ldd	r25, Y+2	; 0x02
+ 2c2:	0a 96       	adiw	r24, 0x0a	; 10
+ 2c4:	9a 83       	std	Y+2, r25	; 0x02
+ 2c6:	89 83       	std	Y+1, r24	; 0x01
+	int f;
+	while (1)
+	{
+		c=1000;
+		f = 1000;
+		while(c>0)
+ 2c8:	8b 81       	ldd	r24, Y+3	; 0x03
+ 2ca:	9c 81       	ldd	r25, Y+4	; 0x04
+ 2cc:	18 16       	cp	r1, r24
+ 2ce:	19 06       	cpc	r1, r25
+ 2d0:	b4 f2       	brlt	.-84     	; 0x27e <main+0x26>
+		PORTB=0x00;
+		delay_us(f);
+		c-=10;
+		f+=10;
+		}
+		c=0;
+ 2d2:	1c 82       	std	Y+4, r1	; 0x04
+ 2d4:	1b 82       	std	Y+3, r1	; 0x03
+		f=2000;
+ 2d6:	80 ed       	ldi	r24, 0xD0	; 208
+ 2d8:	97 e0       	ldi	r25, 0x07	; 7
+ 2da:	9a 83       	std	Y+2, r25	; 0x02
+ 2dc:	89 83       	std	Y+1, r24	; 0x01
+ 2de:	25 c0       	rjmp	.+74     	; 0x32a <main+0xd2>
+		while(c<1000)
+		{
+			PORTB=0x20;
+ 2e0:	e5 e2       	ldi	r30, 0x25	; 37
+ 2e2:	f0 e0       	ldi	r31, 0x00	; 0
+ 2e4:	80 e2       	ldi	r24, 0x20	; 32
+ 2e6:	80 83       	st	Z, r24
+			delay_us(c);
+ 2e8:	8b 81       	ldd	r24, Y+3	; 0x03
+ 2ea:	9c 81       	ldd	r25, Y+4	; 0x04
+ 2ec:	aa 27       	eor	r26, r26
+ 2ee:	97 fd       	sbrc	r25, 7
+ 2f0:	a0 95       	com	r26
+ 2f2:	ba 2f       	mov	r27, r26
+ 2f4:	bc 01       	movw	r22, r24
+ 2f6:	cd 01       	movw	r24, r26
+ 2f8:	0e 94 8d 00 	call	0x11a	; 0x11a <delay_us>
+
+			PORTB=0x00;
+ 2fc:	e5 e2       	ldi	r30, 0x25	; 37
+ 2fe:	f0 e0       	ldi	r31, 0x00	; 0
+ 300:	10 82       	st	Z, r1
+			delay_us(f);
+ 302:	89 81       	ldd	r24, Y+1	; 0x01
+ 304:	9a 81       	ldd	r25, Y+2	; 0x02
+ 306:	aa 27       	eor	r26, r26
+ 308:	97 fd       	sbrc	r25, 7
+ 30a:	a0 95       	com	r26
+ 30c:	ba 2f       	mov	r27, r26
+ 30e:	bc 01       	movw	r22, r24
+ 310:	cd 01       	movw	r24, r26
+ 312:	0e 94 8d 00 	call	0x11a	; 0x11a <delay_us>
+			c+=10;
+ 316:	8b 81       	ldd	r24, Y+3	; 0x03
+ 318:	9c 81       	ldd	r25, Y+4	; 0x04
+ 31a:	0a 96       	adiw	r24, 0x0a	; 10
+ 31c:	9c 83       	std	Y+4, r25	; 0x04
+ 31e:	8b 83       	std	Y+3, r24	; 0x03
+			f-=10;
+ 320:	89 81       	ldd	r24, Y+1	; 0x01
+ 322:	9a 81       	ldd	r25, Y+2	; 0x02
+ 324:	0a 97       	sbiw	r24, 0x0a	; 10
+ 326:	9a 83       	std	Y+2, r25	; 0x02
+ 328:	89 83       	std	Y+1, r24	; 0x01
+		c-=10;
+		f+=10;
+		}
+		c=0;
+		f=2000;
+		while(c<1000)
+ 32a:	8b 81       	ldd	r24, Y+3	; 0x03
+ 32c:	9c 81       	ldd	r25, Y+4	; 0x04
+ 32e:	23 e0       	ldi	r18, 0x03	; 3
+ 330:	88 3e       	cpi	r24, 0xE8	; 232
+ 332:	92 07       	cpc	r25, r18
+ 334:	ac f2       	brlt	.-86     	; 0x2e0 <main+0x88>
+ 336:	9a cf       	rjmp	.-204    	; 0x26c <main+0x14>
+
+00000338 <__mulsi3>:
+ 338:	62 9f       	mul	r22, r18
+ 33a:	d0 01       	movw	r26, r0
+ 33c:	73 9f       	mul	r23, r19
+ 33e:	f0 01       	movw	r30, r0
+ 340:	82 9f       	mul	r24, r18
+ 342:	e0 0d       	add	r30, r0
+ 344:	f1 1d       	adc	r31, r1
+ 346:	64 9f       	mul	r22, r20
+ 348:	e0 0d       	add	r30, r0
+ 34a:	f1 1d       	adc	r31, r1
+ 34c:	92 9f       	mul	r25, r18
+ 34e:	f0 0d       	add	r31, r0
+ 350:	83 9f       	mul	r24, r19
+ 352:	f0 0d       	add	r31, r0
+ 354:	74 9f       	mul	r23, r20
+ 356:	f0 0d       	add	r31, r0
+ 358:	65 9f       	mul	r22, r21
+ 35a:	f0 0d       	add	r31, r0
+ 35c:	99 27       	eor	r25, r25
+ 35e:	72 9f       	mul	r23, r18
+ 360:	b0 0d       	add	r27, r0
+ 362:	e1 1d       	adc	r30, r1
+ 364:	f9 1f       	adc	r31, r25
+ 366:	63 9f       	mul	r22, r19
+ 368:	b0 0d       	add	r27, r0
+ 36a:	e1 1d       	adc	r30, r1
+ 36c:	f9 1f       	adc	r31, r25
+ 36e:	bd 01       	movw	r22, r26
+ 370:	cf 01       	movw	r24, r30
+ 372:	11 24       	eor	r1, r1
+ 374:	08 95       	ret
+
+00000376 <__udivmodsi4>:
+ 376:	a1 e2       	ldi	r26, 0x21	; 33
+ 378:	1a 2e       	mov	r1, r26
+ 37a:	aa 1b       	sub	r26, r26
+ 37c:	bb 1b       	sub	r27, r27
+ 37e:	fd 01       	movw	r30, r26
+ 380:	0d c0       	rjmp	.+26     	; 0x39c <__udivmodsi4_ep>
+
+00000382 <__udivmodsi4_loop>:
+ 382:	aa 1f       	adc	r26, r26
+ 384:	bb 1f       	adc	r27, r27
+ 386:	ee 1f       	adc	r30, r30
+ 388:	ff 1f       	adc	r31, r31
+ 38a:	a2 17       	cp	r26, r18
+ 38c:	b3 07       	cpc	r27, r19
+ 38e:	e4 07       	cpc	r30, r20
+ 390:	f5 07       	cpc	r31, r21
+ 392:	20 f0       	brcs	.+8      	; 0x39c <__udivmodsi4_ep>
+ 394:	a2 1b       	sub	r26, r18
+ 396:	b3 0b       	sbc	r27, r19
+ 398:	e4 0b       	sbc	r30, r20
+ 39a:	f5 0b       	sbc	r31, r21
+
+0000039c <__udivmodsi4_ep>:
+ 39c:	66 1f       	adc	r22, r22
+ 39e:	77 1f       	adc	r23, r23
+ 3a0:	88 1f       	adc	r24, r24
+ 3a2:	99 1f       	adc	r25, r25
+ 3a4:	1a 94       	dec	r1
+ 3a6:	69 f7       	brne	.-38     	; 0x382 <__udivmodsi4_loop>
+ 3a8:	60 95       	com	r22
+ 3aa:	70 95       	com	r23
+ 3ac:	80 95       	com	r24
+ 3ae:	90 95       	com	r25
+ 3b0:	9b 01       	movw	r18, r22
+ 3b2:	ac 01       	movw	r20, r24
+ 3b4:	bd 01       	movw	r22, r26
+ 3b6:	cf 01       	movw	r24, r30
+ 3b8:	08 95       	ret
+
+000003ba <_exit>:
+ 3ba:	f8 94       	cli
+
+000003bc <__stop_program>:
+ 3bc:	ff cf       	rjmp	.-2      	; 0x3bc <__stop_program>
