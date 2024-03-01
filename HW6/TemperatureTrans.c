@@ -59,7 +59,7 @@ void loop() {
 
     // Send the potentiometer value over UART
     char buffer[20];
-    snprintf(buffer, 20, "Pool Temperature: %u\r\n", potValue);
+    snprintf(buffer, 20, "Pool Temp: %u\r\n", potValue/10);
     uart_sendString(buffer);
 
     _delay_ms(500); // Add a small delay to limit the number of readings per second
