@@ -1,0 +1,51 @@
+#define F_CPU 16000000UL // 16 MHz clock speed
+#include <avr/io.h>
+#include <util/delay.h>
+
+const uint16_t noteFrequencies[] = {262, 294, 330, 349, 392, 440, 494};
+
+void initTimer1() {
+    // Configure Timer1 in Fast PWM mode with non-inverted output
+    TCCR1A = (1 << COM1A0) | (1 << WGM11) | (1 << WGM10);
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS10); // No prescaling
+    DDRB |= (1 << DDB1); // Set PB1 (OC1A) as output. This is digital pin 9 on Arduino.
+}
+
+void playTone(uint16_t frequency, uint16_t duration) {
+    // Calculate the toggle rate to achieve the desired frequency
+    // Formula: ICR1 = F_CPU / (2 * N * f) - 1 (N = prescaler, f = frequency)
+    // For f = 440Hz, ICR1 = 16000000 / (2 * 1 * 440) - 1 = 18180 - 1
+    ICR1 = (F_CPU / (2 * frequency)) - 1;
+
+    // Play tone for the specified duration
+    uint32_t cycles = (uint32_t)duration * frequency / 1000;
+    for (uint32_t i = 0; i < cycles; i++) {
+        // Wait for the timer to flip its output bit
+        _delay_ms(1); // This delay controls the tone's duration
+    }
+
+    // Stop the tone
+    TCCR1A &= ~(1 << COM1A0); // Disconnect OC1A
+}
+
+void setup() {
+    initTimer1();
+}
+
+void loop() {
+    // Play each note in the scale
+    for (int i = 0; i < 7; i++) {
+        playTone(noteFrequencies[i], 500); // Play note for 500ms
+        _delay_ms(550); // Wait a little more than the note duration to separate the notes
+    }
+
+    _delay_ms(1000); // Wait before repeating the scale
+}
+
+int main(void) {
+    setup();
+    while(1) {
+        loop();
+    }
+    return 0;
+}
