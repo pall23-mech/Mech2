@@ -1,0 +1,33 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include "DelayMech.h"
+#include "myUSART.h"
+
+void setup() {
+  // Start serial communication at 57600 baud rate
+  Serial.begin(57600);
+  //pinMode(A2, INPUT);
+  // Configure Timer1 for Fast PWM mode to generate a square wave on pin 9
+  // Set up pin 9 for output (OC1A)
+  DDRB |= _BV(DDB1); // PB1 is pin 9 on Arduino Uno
+  // Set Timer1 to Fast PWM mode with TOP in ICR1
+  TCCR1A = _BV(COM1A0) | _BV(WGM11); // Toggle OC1A on Compare Match, WGM11:0 = 1010
+  TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10); // No prescaling, WGM13:2 = 1010
+  ICR1 = 19999; // Set TOP for 50Hz square wave
+
+  // Configure Timer2 for Fast PWM mode to generate a square wave on pin 11
+  // Set up pin 11 for output (OC2A)
+  DDRB |= _BV(DDB3); // PB3 is pin 11 on Arduino Uno
+  // Set Timer2 to Fast PWM mode
+  TCCR2A = _BV(COM2A0) | _BV(WGM21) | _BV(WGM20); // Toggle OC2A on Compare Match, Fast PWM
+  TCCR2B = _BV(CS20); // No prescaling
+  OCR2A = 127; // Set compare match value for a ~50% duty cycle at default Timer2 PWM frequency
+}
+
+void loop() {
+  // The square waves are generated automatically by the hardware, no need to do anything in the loop
+  // If you want to change the frequency or duty cycle dynamically, you would adjust the ICR1, OCR1A, or OCR2A values here
+//	  int sensorValue = analogRead(A2);  // Read the value from analog pin A2
+	 // Serial.println(sensorValue);       // Print the value to the Serial Monitor
+	  delay(1000);                       // Wait a bit before reading again
+}
