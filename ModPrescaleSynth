@@ -43,6 +43,7 @@ int main(void) {
     // Timer0 configuration for Fast PWM mode
     TCCR0A = (1<<WGM01) | (1<<WGM00); // Set to Fast PWM
     TCCR0A |= (1<<COM0A1); // Clear OC0A on Compare Match, set at BOTTOM (non-inverting mode)
+    OCR0A = 127; // Set compare match value for a 50% duty cycle
     TCCR0B = (1<<CS02); // Prescaler 256
 
     // Enable Timer0 overflow and compare match A interrupts
@@ -77,8 +78,5 @@ int main(void) {
                 break;
         }
     }
-
-
-
-
 }
+
