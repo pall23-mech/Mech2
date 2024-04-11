@@ -1,0 +1,140 @@
+#define F_CPU 16000000UL // Define CPU frequency as 16MHz
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "DelayMech.h"
+
+#define BAUD 9600
+#define MY_UBRR (F_CPU/16/BAUD-1)
+
+void adc_init() {
+    // Reference voltage = AVcc, left adjust result (for 8-bit precision)
+    ADMUX = (1 << REFS0) | (1 << ADLAR);
+    // Enable the ADC and set the prescaler to 128 (for 16MHz clock, 125KHz ADC clock)
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+}
+
+uint8_t adc_read(uint8_t channel) {
+    // Select ADC channel (0-7)
+    ADMUX = (ADMUX & 0xF8) | (channel & 0x07);
+    // Start the conversion
+    ADCSRA |= (1 << ADSC);
+    // Wait for the conversion to finish
+    while (ADCSRA & (1 << ADSC));
+    // Return the 8-bit result
+    return ADCH; // Using 8-bit precision
+}
+
+void uart_transmit(unsigned char data) {
+    // Wait for the transmit buffer to be empty
+    while (!(UCSR0A & (1<<UDRE0)));
+    // Put data into buffer, sends the data
+    UDR0 = data;
+}
+
+void print_adc_value(uint8_t value) {
+    // Convert the value to a string (assuming a maximum of 255)
+    char buffer[4];
+    itoa(value, buffer, 10); // Convert integer to string (decimal base)
+    // Transmit each character of the string
+    for (char* p = buffer; *p; p++) {
+        uart_transmit(*p);
+    }
+    uart_transmit('\n'); // New line for readability
+}
+// Initialize UART
+void uart_init(void) {
+    // Set baud rate
+    UBRR0H = (MY_UBRR >> 8);
+    UBRR0L = MY_UBRR;
+    // Enable receiver and transmitter
+    UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+    // Set frame format to 8 data bits, no parity, 1 stop bit
+    UCSR0C = (3<<UCSZ00);
+}
+
+// Function to receive a single byte via UART
+unsigned char uart_receive(void) {
+    // Wait for data to be received
+    while (!(UCSR0A & (1<<RXC0)));
+    // Get and return received data from buffer
+    return UDR0;
+}
+
+// ISR for Timer0 overflow: Turns the LED on at overflow
+ISR(TIMER0_OVF_vect) {
+    PORTB |= (1<<PB1); // Assuming LED is connected to PB5
+}
+
+// ISR for Timer0 compare match A: Turns the LED off
+ISR(TIMER0_COMPA_vect) {
+    PORTB &= ~(1<<PB1);
+}
+
+int main(void) {
+    // Set PB1 (D9) and PB3 (D11) as output pins
+    DDRB |= (1<<PB1) | (1<<PB3);    // Initialize UART
+    uart_init();
+    adc_init(); // Initialize ADC
+
+
+    // Timer2 configuration for Fast PWM mode, aiming for 50% duty cycle and half frequency of Timer0
+    TCCR2A = (1<<WGM21) | (1<<WGM20); // Fast PWM
+    TCCR2A |= (1<<COM2A1); // Clear OC2A on Compare Match (non-inverting mode)
+    OCR2A = 127; // 50% duty cycle
+    // Prescaler for Timer2 to approximately half the frequency of Timer0
+    // Assuming Timer0's prescaler is 256 to make Timer2's frequency half,
+    // we might not need to change Timer2's prescaler in the switch case if it's already set to produce half frequency.
+    TCCR2B = (1<<CS22) | (1<<CS21); // Prescaler 256 for Timer2 as well, adjust if needed
+
+    // Timer0 configuration for Fast PWM mode
+    TCCR0A = (1<<WGM01) | (1<<WGM00); // Set to Fast PWM
+    TCCR0A |= (1<<COM0A1); // Clear OC0A on Compare Match, set at BOTTOM (non-inverting mode)
+    OCR0A = 127; // Set compare match value for a 50% duty cycle
+    TCCR0B = (1<<CS02); // Prescaler 256
+
+    // Enable Timer0 overflow and compare match A interrupts
+    TIMSK0 = (1<<TOIE0) | (1<<OCIE0A);
+
+    // Global interrupt enable
+    sei();
+
+    unsigned char input;
+    while(1) {
+        input = uart_receive(); // Read character from UART
+        uint8_t adcValue = adc_read(0); // Read the value from A0
+        print_adc_value(adcValue); // Print the value over serial
+
+        delay_ms(1); // Delay a bit to not flood the serial output
+        // Adjust both Timer0 and Timer2 prescalers based on the input
+        switch(input) {
+            case '0':
+                TCCR0B = (1<<CS00); // No prescaling for Timer0, highest frequency
+                TCCR2B = (1<<CS21); // Set Timer2 prescaler to 8, to approximate half the frequency of Timer0
+                break;
+            case '1':
+                TCCR0B = (1<<CS01); // Prescaler of 8 for Timer0
+                TCCR2B = (1<<CS22); // Set Timer2 prescaler to 64, to keep the frequency roughly half of Timer0's
+                break;
+            case '2':
+                TCCR0B = (1<<CS01) | (1<<CS00); // Prescaler of 64 for Timer0
+                TCCR2B = (1<<CS22) | (1<<CS20); // Set Timer2 prescaler to 128, adjusting for half frequency
+                break;
+            case '3':
+                TCCR0B = (1<<CS02); // Prescaler of 256 for Timer0
+                TCCR2B = (1<<CS22) | (1<<CS21); // Prescaler of 256 for Timer2, maintaining the initial half frequency relationship
+                break;
+            case '4':
+                TCCR0B = (1<<CS02) | (1<<CS00); // Prescaler of 1024 for Timer0, lowest frequency
+                // For Timer2, maintaining a half frequency relationship with the lowest Timer0 frequency setting
+                // may not be practical due to prescaler limits, so we'll match Timer0's lowest frequency setting.
+                // This will need adjustment based on your specific frequency requirements and available prescaler options.
+                TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20); // Also setting to 1024, adjust as needed
+                break;
+            default:
+                // If input is not 0, 1, 2, 3, or 4, do nothing
+                break;
+        }
+
+    }
+
+}
