@@ -55,9 +55,10 @@ void uart_init(void) {
 // Function to receive a single byte via UART
 unsigned char uart_receive(void) {
     // Wait for data to be received
-    while (!(UCSR0A & (1<<RXC0)));
+    if (UCSR0A & (1<<RXC0))
     // Get and return received data from buffer
     return UDR0;
+    else return 0;
 }
 
 // ISR for Timer0 overflow: Turns the LED on at overflow
@@ -104,13 +105,15 @@ int main(void) {
         uint8_t adcValue = adc_read(0); // Read the value from A0
         print_adc_value(adcValue); // Print the value over serial
 
-        delay_ms(1); // Delay a bit to not flood the serial output
+        delay_ms(200); // Delay a bit to not flood the serial output
         // Adjust both Timer0 and Timer2 prescalers based on the input
         switch(input) {
-            case '0':
-                TCCR0B = (1<<CS00); // No prescaling for Timer0, highest frequency
-                TCCR2B = (1<<CS21); // Set Timer2 prescaler to 8, to approximate half the frequency of Timer0
-                break;
+			case '0':
+				TCCR0B = (1<<CS00); // No prescaling for Timer0, highest frequency
+				TCCR2B = (1<<CS21); // Set Timer2 prescaler to 8, to approximate half the frequency of Timer0
+				TCCR0A |= (1<<COM0A1); // Ensure OC0A (D9) is connected
+				TCCR2A |= (1<<COM2A1); // Ensure OC2A (D11) is connected
+            break;
             case '1':
                 TCCR0B = (1<<CS01); // Prescaler of 8 for Timer0
                 TCCR2B = (1<<CS22); // Set Timer2 prescaler to 64, to keep the frequency roughly half of Timer0's
@@ -130,8 +133,17 @@ int main(void) {
                 // This will need adjustment based on your specific frequency requirements and available prescaler options.
                 TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20); // Also setting to 1024, adjust as needed
                 break;
+            case '5':
+                // Disconnect OC0A (D9) and OC2A (D11) to make the synth silent
+                TCCR0A &= ~(1<<COM0A1);
+                TCCR2A &= ~(1<<COM2A1);
+
+                // Optionally, set the pins to LOW to ensure they are silent
+                PORTB &= ~(1<<PB1); // Set D9 to LOW
+                PORTB &= ~(1<<PB3); // Set D11 to LOW
+                break;
             default:
-                // If input is not 0, 1, 2, 3, or 4, do nothing
+                // If input is not recognized, do nothing
                 break;
         }
 
