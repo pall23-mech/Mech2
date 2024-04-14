@@ -1,0 +1,115 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+
+#define F_CPU 16000000UL // 16 MHz clock speed
+#define BAUD 9600
+#define MY_UBRR (F_CPU/16/BAUD-1)
+
+const uint16_t noteFrequencies[] = {262, 294, 330, 349, 392, 440, 494}; // Frequencies for C4 to B4
+
+void initTimer1() {
+    TCCR1A = (1 << COM1A0) | (1 << WGM11) | (1 << WGM10);
+    TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS12); // Prescaler set to 256
+    DDRB |= (1 << PB1); // Set PB1 as output
+}
+
+void playTone(uint16_t frequency, uint16_t duration) {
+    uint16_t ocrValue = (F_CPU / (2 * 256 * frequency)) - 1;
+    OCR1A = ocrValue; // Set the frequency
+
+    uint32_t numCycles = (uint32_t)duration * frequency / 1000;
+    for (uint32_t i = 0; i < numCycles; i++) {
+        _delay_ms(1); // Delay for the tone duration
+    }
+
+    OCR1A = 0; // Stop the tone
+}
+
+void uart_init(void) {
+    UBRR0H = (MY_UBRR >> 8);
+    UBRR0L = MY_UBRR;
+    UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+    UCSR0C = (3<<UCSZ00);
+}
+
+
+void adc_init() {
+    // Reference voltage = AVcc, left adjust result (for 8-bit precision)
+    ADMUX = (1 << REFS0) | (1 << ADLAR);
+    // Enable the ADC and set the prescaler to 128 (for 16MHz clock, 125KHz ADC clock)
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+}
+
+uint8_t adc_read(uint8_t channel) {
+    // Select ADC channel (0-7)
+    ADMUX = (ADMUX & 0xF8) | (channel & 0x07);
+    // Start the conversion
+    ADCSRA |= (1 << ADSC);
+    // Wait for the conversion to finish
+    while (ADCSRA & (1 << ADSC));
+    // Return the 8-bit result
+    return ADCH; // Using 8-bit precision
+}
+
+void uart_transmit(unsigned char data) {
+    // Wait for the transmit buffer to be empty
+    while (!(UCSR0A & (1<<UDRE0)));
+    // Put data into buffer, sends the data
+    UDR0 = data;
+}
+
+void print_adc_value(uint8_t value) {
+    // Convert the value to a string (assuming a maximum of 255)
+    char buffer[4];
+    itoa(value, buffer, 10); // Convert integer to string (decimal base)
+    // Transmit each character of the string
+    for (char* p = buffer; *p; p++) {
+        uart_transmit(*p);
+    }
+    uart_transmit('\n'); // New line for readability
+}
+// Initialize UART
+//void uart_init(void) {
+    // Set baud rate
+  //  UBRR0H = (MY_UBRR >> 8);
+  //  UBRR0L = MY_UBRR;
+    // Enable receiver and transmitter
+  //  UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+    // Set frame format to 8 data bits, no parity, 1 stop bit
+   // UCSR0C = (3<<UCSZ00);
+//}
+
+// Function to receive a single byte via UART
+unsigned char uart_receive(void) {
+    // Wait for data to be received
+    if (UCSR0A & (1<<RXC0))
+    // Get and return received data from buffer
+    return UDR0;
+    else return 0;
+}
+
+// ISR for Timer0 overflow: Turns the LED on at overflow
+ISR(TIMER0_OVF_vect) {
+    PORTB |= (1<<PB1); // Assuming LED is connected to PB5
+}
+
+// ISR for Timer0 compare match A: Turns the LED off
+ISR(TIMER0_COMPA_vect) {
+    PORTB &= ~(1<<PB1);
+}
+
+int main(void) {
+    uart_init();
+    initTimer1();
+
+    while(1) {
+        for (int i = 0; i < sizeof(noteFrequencies)/sizeof(noteFrequencies[0]); i++) {
+            playTone(noteFrequencies[i], 500); // Play each note for 500ms
+        }
+
+        _delay_ms(1000); // Delay before repeating the scale
+    }
+
+    return 0;
+}
